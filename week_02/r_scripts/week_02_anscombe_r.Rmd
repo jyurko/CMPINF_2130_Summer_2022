@@ -1,0 +1,479 @@
+---
+title: "CMPINF 2130 Summer 2022 - Week 02"
+subtitle: "aesthetic deep dive"
+author: "Dr. Joseph P. Yurko"
+date: '2022-05-24'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+```{r, load_packages}
+library(tidyverse)
+```
+
+## Anscombe
+
+```{r, a_1}
+anscombe %>% glimpse()
+```
+
+```{r, a_2}
+anscombe
+```
+
+Start working with the first dataset within Anscombe.  
+
+```{r, a_3}
+anscombe %>% 
+  select(x1, y1)
+```
+
+```{r, a_4}
+anscombe %>% 
+  select(x = x1, y = y1)
+```
+
+```{r, a_5}
+anscombe %>% 
+  rename(x = x1, y = y1)
+```
+
+Or we can exploit common naming patterns with `dplyr` helper functions.  
+
+```{r, a_6}
+anscombe %>% 
+  select(ends_with('1'))
+```
+
+Let's combine the helper with the `rename()` function.  
+
+```{r, a_7}
+a1 <- anscombe %>% 
+  select(ends_with('1')) %>% 
+  rename(x = x1, y = y1)
+```
+
+## Visualize the a1 data set
+
+The 3 major components of any (statistical) figure.  
+
+* data - a table (dataframe)  
+* aesthetics - what do we want to see (the columns from a table)  
+* geometric objects - "how" do we want to see the variables  
+
+Create a scatter plot to visualize the relationship between `y` and `x`.  
+
+```{r, v_1}
+a1 %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point()
+```
+
+
+
+Maybe you mapped the aesthetics within the `geom_point()` layer...  
+
+```{r, v_2}
+a1 %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x, y = y))
+```
+
+
+
+But...what happens if we did NOT map the `x` and `y` aesthetics?  
+
+The code below produces an error and is NOT executed or evaluated.  
+
+```{r, v_3, eval=FALSE}
+a1 %>%
+  ggplot() +
+  geom_point()
+```
+
+
+Some more errors that can occur. Map the `x` aesthetic but forget the `y` aesthetic.  
+
+```{r, v_4}
+### the code below produces an error and is commented out
+# a1 %>% 
+#   ggplot(mapping = aes(x = x)) +
+#   geom_point()
+```
+
+Same thing with the `y` aesthetic.  
+
+```{r, v_5}
+### ERROR!!!
+# a1 %>% 
+#   ggplot(mapping = aes(y = x)) +
+#   geom_point()
+```
+
+
+What happens if we forget about the `aes()` function?  
+
+We need to include the aesthetics within the `aes()` function to instruct ggplot2 to "look" at the provided data. Without `aes()` it cannot find the variable.  
+
+The code chunk below results in an error.  
+
+```{r, v_6, eval=FALSE}
+a1 %>% 
+  ggplot() +
+  geom_point(x = x, y = y)
+```
+
+
+Let's create a data set for the second Anscombe quarter data.  
+
+```{r, v_7}
+a2 <- anscombe %>% 
+  select(ends_with('2')) %>% 
+  rename(x = x2, y = y2)
+```
+
+
+Create a scatter plot between `y` and `x` for the second quartet.  
+
+```{r, v_8}
+a2 %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point()
+```
+
+How does `aes()` handle the other aesthetics.  
+
+Let's make a scatterplot for the `a1` data set again but with blue markers.  
+First, try setting the aesthetic, `color` WITHIN `aes()`.  
+
+```{r, v_9}
+a1 %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point(mapping = aes(color = 'blue'))
+```
+
+
+Assign the `color` outside of `aes()` within `geom_point()`.  
+
+```{r, v_10}
+a1 %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point(color = 'blue')
+```
+
+
+
+The `aes()` function wants to link or MAP or associate variable values to visual properties.  
+
+```{r, v_11}
+a1 %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point(mapping = aes(color = 'the value of a variable that does not exist'))
+```
+
+
+If you want to HARD CODE a visual property do NOT use `aes()`.  
+
+Let's map aesthetics to "manually defined variable values" to let us directly compare quartets within Anscombe.  
+
+```{r, x_1}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1)) +
+  geom_point(mapping = aes(x = x2, y = y2))
+```
+
+Distinguish one data set from the other with color. First, do so by hard coding the colors outside `aes()`.  
+
+```{r, x_2}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1),
+             color = 'red', size = 4) +
+  geom_point(mapping = aes(x = x2, y = y2),
+             color = 'dodgerblue', size = 4)
+```
+
+Instead of hard coding we can define the color within `aes()` by "manually mapping to a variable".  
+
+```{r, x_3}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1,
+                           color = 'first'),
+             size = 4) +
+  geom_point(mapping = aes(x = x2, y = y2,
+                           color = 'second'),
+             size = 4)
+```
+
+
+Change the legend guide LABEL with the `scale_` family functions.  
+
+
+```{r, x_4}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1,
+                           color = 'first'),
+             size = 4) +
+  geom_point(mapping = aes(x = x2, y = y2,
+                           color = 'second'),
+             size = 4) +
+  scale_color_discrete('dataset')
+```
+
+
+We can use a different categorical color scale if we'd like.  
+
+```{r, x_5}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1,
+                           color = 'first'),
+             size = 4) +
+  geom_point(mapping = aes(x = x2, y = y2,
+                           color = 'second'),
+             size = 4) +
+  scale_color_brewer('dataset', palette = 'Set1')
+```
+
+We know the axis labels are not correct, so we can override with the `labs()` function.  
+
+```{r, x_6}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1,
+                           color = 'first'),
+             size = 4) +
+  geom_point(mapping = aes(x = x2, y = y2,
+                           color = 'second'),
+             size = 4) +
+  scale_color_brewer('dataset', palette = 'Set1') +
+  labs(x = 'x', y = 'y')
+```
+
+Also use the marker shape to denote the dataset. Include the shape scale function so ggplot2 knows the variable being represented is the same as color.  
+
+```{r, x_7}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1,
+                           color = 'first',
+                           shape = 'first'),
+             size = 4) +
+  geom_point(mapping = aes(x = x2, y = y2,
+                           color = 'second',
+                           shape = 'second'),
+             size = 4) +
+  scale_color_brewer('dataset', palette = 'Set1') +
+  scale_shape_discrete('dataset') +
+  labs(x = 'x', y = 'y')
+```
+
+
+Instead of hard coding the marker size, link the marker size to a variable.  
+
+```{r, x_8}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1,
+                           color = 'first',
+                           shape = 'first',
+                           size = 'first')) +
+  geom_point(mapping = aes(x = x2, y = y2,
+                           color = 'second',
+                           shape = 'second',
+                           size = 'second')) +
+  scale_color_brewer('dataset', palette = 'Set1') +
+  scale_shape_discrete('dataset') +
+  labs(x = 'x', y = 'y')
+```
+
+
+When we want to use `size` with a categorical we need to use a MANAUL scale.  
+
+```{r, x_9}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1,
+                           color = 'first',
+                           shape = 'first',
+                           size = 'first')) +
+  geom_point(mapping = aes(x = x2, y = y2,
+                           color = 'second',
+                           shape = 'second',
+                           size = 'second')) +
+  scale_color_brewer('dataset', palette = 'Set1') +
+  scale_shape_discrete('dataset') +
+  scale_size_manual('dataset',
+                    values = c("first" = 5.5,
+                               "second" = 2.5)) +
+  labs(x = 'x', y = 'y')
+```
+
+We can also modify the marker transparency with the `alpha` aesthetic.  
+
+```{r, x_10}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1,
+                           color = 'first',
+                           shape = 'first',
+                           size = 'first',
+                           alpha = 'first')) +
+  geom_point(mapping = aes(x = x2, y = y2,
+                           color = 'second',
+                           shape = 'second',
+                           size = 'second',
+                           alpha = 'second')) +
+  scale_color_brewer('dataset', palette = 'Set1') +
+  scale_shape_discrete('dataset') +
+  scale_size_manual('dataset',
+                    values = c("first" = 5.5,
+                               "second" = 2.5)) +
+  labs(x = 'x', y = 'y')
+```
+
+
+
+We can use a manual scale to associate transpreancy with a categorical variable.  
+
+```{r, x_11}
+anscombe %>% 
+  ggplot() +
+  geom_point(mapping = aes(x = x1, y = y1,
+                           color = 'first',
+                           shape = 'first',
+                           size = 'first',
+                           alpha = 'first')) +
+  geom_point(mapping = aes(x = x2, y = y2,
+                           color = 'second',
+                           shape = 'second',
+                           size = 'second',
+                           alpha = 'second')) +
+  scale_color_brewer('dataset', palette = 'Set1') +
+  scale_shape_discrete('dataset') +
+  scale_size_manual('dataset',
+                    values = c("first" = 5.5,
+                               "second" = 2.5)) +
+  scale_alpha_manual('dataset',
+                     values = c('first' = 0.45,
+                                'second' = 0.95)) +
+  labs(x = 'x', y = 'y')
+```
+
+
+## 4 data sets
+
+The 4 data sets are constructed to consider the **linear relationship** between `y` and `x`.  
+
+Let's fit a linear model aka "the best fit line" between the output and input for each data set.  
+
+```{r, m_1}
+mod_1 <- lm(y ~ x, data = a1)
+```
+
+```{r, m_2}
+mod_1 %>% summary()
+```
+
+What are the coefficients? The intercept and slope?  
+
+```{r, m_3}
+coef(mod_1)
+```
+
+```{r, m_4}
+mod_1 %>% broom::tidy()
+```
+
+
+Fit a linear model for the second data set.  
+
+```{r, m_5}
+mod_2 <- lm(y ~ x, data = a2)
+
+mod_2 %>% broom::tidy()
+```
+
+
+Look at the R-squared.  
+
+```{r, m_6}
+mod_1 %>% broom::glance()
+```
+
+```{r, m_7}
+mod_2 %>% broom::glance()
+```
+
+
+## Visualize all 4 datasets
+
+Tidy the `anscombe` data set.  
+
+```{r, tt_1}
+a_tidy <- anscombe %>% 
+  tibble::rowid_to_column() %>% 
+  pivot_longer(cols = !c("rowid")) %>% 
+  tidyr::separate(name,
+                  c("variable", "dataset"),
+                  sep = 1) %>% 
+  pivot_wider(names_from = 'variable', values_from = 'value') %>% 
+  arrange(dataset)
+```
+
+The tidy data long format data are consistent with the data from Seaborn.  
+
+```{r, tt_2}
+a_tidy %>% glimpse()
+```
+
+Use facets to show the different groups.  
+
+```{r, tt_3}
+a_tidy %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point() +
+  facet_wrap(~dataset, labeller = 'label_both')
+```
+
+We can easily map any aesthetic to the `dataset` column.  
+
+```{r, tt_4}
+a_tidy %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point(mapping = aes(color = dataset,
+                           shape = dataset),
+             size = 3.5) +
+  facet_wrap(~dataset, labeller = 'label_both') +
+  theme(legend.position = 'none')
+```
+
+We can easily add in the best fit line with another layer.  
+
+```{r, tt_5}
+a_tidy %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point(mapping = aes(color = dataset,
+                           shape = dataset),
+             size = 3.5) +
+  geom_smooth(method = lm,
+              formula = y ~ x,
+              mapping = aes(color = dataset,
+                            fill = dataset)) +
+  facet_wrap(~dataset, labeller = 'label_both') +
+  theme(legend.position = 'none')
+```
+
+
+
+
+
+

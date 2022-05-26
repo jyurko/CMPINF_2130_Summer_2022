@@ -1,0 +1,150 @@
+---
+title: "CMPINF 2130 Summer 2022 - Week 01"
+subtitle: "Our first ggplot graphic"
+author: "Dr. Joseph P. Yurko"
+date: '2022-05-18'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+```{r, load_packages}
+library(tidyverse)
+```
+
+
+## Make data
+
+```{r, make_01}
+df_a <- data.frame(x = seq(-2, 2, length.out = 9))
+```
+
+
+```{r, make_02}
+df_a
+```
+
+Filter or conditionally subset all rows where `x < 0`.  
+
+```{r, make_03}
+filter(df_a, x < 0)
+```
+
+The forward pipe operator allows us to pass objects into functions "left-to-right".  
+
+```{r, make_04}
+df_a %>% filter(x < 0)
+```
+
+Chain together multiple data manipulation steps those steps will read left-to-right.  
+
+```{r, make_05}
+df_a %>% filter(x < 0) %>% dim()
+```
+
+```{r, make_06}
+dim( filter(df_a, x<0) )
+```
+
+```{r}
+df_a %>% 
+  mutate(y = x^2)
+```
+
+```{r}
+df_a
+```
+
+```{r}
+mutate(df_a, y = x^2, z = 3 * x, w = y %% 1)
+```
+
+```{r, anamed_for_the_chunk}
+df_a %>% 
+  mutate(y = x^2,
+         z = 3 * x,
+         w = y %% 1) %>% 
+  filter(z < 0) %>% 
+  rename(x1 = x, yy = y)
+```
+
+
+
+## Visualize data
+
+
+```{r, viz_01}
+df_a %>% 
+  mutate(y = x^2) %>% 
+  ggplot()
+```
+
+
+```{r}
+df_a %>% 
+  mutate(y = x^2) %>% 
+  ggplot(mapping = aes(x = x, y = y))
+```
+
+```{r}
+df_a %>% 
+  mutate(y = x^2) %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point(size = 8, color = 'blue', shape = 15, alpha = 0.55)
+```
+
+```{r}
+df_a %>% 
+  mutate(y = x^2) %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_line(size = 2.5) +
+  geom_point(size = 8, color = 'blue', shape = 15, alpha = 0.33)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
