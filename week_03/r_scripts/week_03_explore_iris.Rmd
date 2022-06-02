@@ -1,0 +1,890 @@
+---
+title: "CMPINF 2130 Summer 2022 - Week 03"
+subtitle: "Explore iris"
+author: "Dr. Joseph P. Yurko"
+date: '2022-05-31'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+```{r, load_packages}
+library(tidyverse)
+```
+
+## Iris
+
+`iris` is part of base R.  
+
+```{r, iris_1}
+iris %>% glimpse()
+```
+
+## Scatter plot
+
+### 2 variables
+
+
+```{r, iris_2}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point()
+```
+
+Manually change the marker size to make it easier to see the plot.  
+
+Change the `fig.` chunk options to modify the figure size as rendered in the report.  
+
+```{r, iris_3, fig.width=12}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5)
+```
+
+
+We can modify the transparency to help see "overlap".  
+
+```{r, iris_4}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5, alpha = 0.5)
+```
+
+What is the general relationship between these two variables?  
+
+We can add a smoothing trend to help us "see a general pattern through the noise".  
+
+```{r, iris_5}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5, alpha = 0.5) +
+  geom_smooth(formula = y ~ x, 
+              method = lm)
+```
+
+### 3 variables
+
+#### Categorical
+
+We can use the marker shape, marker color, marker size, marker transparency as visual attributes to display the 3rd variable.  
+
+However, it's usually best practice to use color and/or shape for categorical variables.  
+
+Let's start by mapping the `Species` to the marker `color` aesthetic.  
+
+```{r, iris_6}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species),
+             size = 3.5)
+```
+
+We could map all aesthetics in the parent ggplot() call, but I don't like to do this.  
+
+```{r, iris_7}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width,
+                       color = Species)) +
+  geom_point(size = 3.5)
+```
+
+We can try using shape instead of color for categorical variables.  
+
+```{r, iris_8}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5,
+             mapping = aes(shape = Species))
+```
+
+Sometimes non-solid markers can also help with identifying overlap.  
+
+```{r, iris_9}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5,
+             mapping = aes(shape = Species)) +
+  scale_shape_discrete(solid = FALSE)
+```
+
+
+When we are only working with 3 variables we can use shape and color for a categorical.  
+
+```{r, iris_10}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5,
+             mapping = aes(shape = Species,
+                           color = Species))
+```
+
+Lastly, let's hard code the transparency to help with overlap.  
+
+```{r, iris_11}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5,
+             mapping = aes(shape = Species,
+                           color = Species),
+             alpha = 0.5)
+```
+
+We can manually define the shapes.  
+
+```{r, iris_12}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5,
+             mapping = aes(shape = Species,
+                           color = Species),
+             alpha = 0.5) +
+  scale_shape_manual(values = c('setosa' = 20,
+                                'versicolor' = 21,
+                                'virginica' = 4))
+```
+
+Sometimes we just want to look a manually identified BINARIZED version of a categorical variable.  
+
+We can define a new variable with `mutate()` to correspond to the binarized "event".  
+
+```{r, iris_13}
+iris %>% 
+  mutate(species_binary = ifelse(Species == 'setosa', 
+                                 'setosa species',
+                                 'something else')) %>% 
+  select(Species, species_binary) %>% 
+  count(Species, species_binary)
+```
+
+We can use our manually created variable to color.  
+
+```{r, iris_14}
+iris %>% 
+  mutate(species_binary = ifelse(Species == 'setosa',
+                                 'setosa species',
+                                 'something else')) %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = species_binary),
+             size = 3.5, alpha = 0.5)
+```
+
+
+We can manually create variables in `ggplot2` functions.  
+
+
+```{r, iris_15}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species == 'setosa'),
+             size = 3.5, alpha = 0.5)
+```
+
+If the legend is ever too long...we can move it to the top or bottom of the figure.  
+
+```{r, iris_16}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species == 'setosa'),
+             size = 3.5, alpha = 0.5) +
+  theme(legend.position = 'top')
+```
+
+We can apply the direct conditional test to multiple aesthetics.  
+
+```{r, iris_17}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species == 'setosa',
+                           shape = Species == 'setosa'),
+             size = 3.5, alpha = 0.5) +
+  theme(legend.position = 'top')
+```
+
+To demonstrate working with a larger number of categories let's randomly assign letters to the rows of `iris`.  
+
+```{r, iris_18}
+LETTERS
+```
+
+Randomly sample or shuffle the letters via the `sample()` function.  
+
+```{r, iris_19}
+set.seed(2130)
+sample(LETTERS)
+```
+
+We need to sample **WITH REPLACEMENT**.  
+
+```{r, iris_20}
+set.seed(2130)
+sample(LETTERS, size = nrow(iris), replace = TRUE)
+```
+
+Let's add the randomly shuffled letters to `iris`.  
+
+```{r, iris_21}
+set.seed(2130)
+iris %>% 
+  mutate(random_letters = sample(LETTERS, size = n(), replace = TRUE)) %>% 
+  count(random_letters)
+```
+
+
+First, check adding a column based on a condition.  
+
+```{r, iris_22}
+iris %>% 
+  mutate(a_new_variable = 'A',
+         b_new_variable = Species == 'setosa',
+         c_new_variable = ifelse(Species == 'setosa',
+                                 'the setosa species',
+                                 'a different species'),
+         d_new_variable = ifelse(Species == 'setosa',
+                                 101,
+                                 -101)) %>% 
+  head()
+```
+
+
+Now that we know how to add the random shuffled letter colum let's color by this new variable.  
+
+```{r, iris_23}
+set.seed(2130)
+iris %>% 
+  mutate(random_letters = sample(LETTERS, size = n(), replace = TRUE)) %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = random_letters),
+             size = 3.5)
+```
+
+What if we use shape as an aesthetic for our randomly shuffled letters?  
+
+```{r, iris_24}
+set.seed(2130)
+iris %>% 
+  mutate(random_letters = sample(LETTERS, size = n(), replace = TRUE)) %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = random_letters,
+                           shape = random_letters),
+             size = 3.5)
+```
+
+
+Other categorical color scales.  
+
+Modify the luminance or lightness of the markers.  
+
+```{r, iris_25}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5, 
+             mapping = aes(color = Species)) +
+  scale_color_discrete(l = 95)
+```
+
+Modifying the colors may require us to change the background panel colors.  
+
+```{r, iris_26}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5, 
+             mapping = aes(color = Species)) +
+  scale_color_discrete(l = 95) +
+  theme(panel.background = element_rect(fill = 'black'),
+        panel.grid.major.x = element_line(color = 'yellow'),
+        panel.grid.minor.x = element_line(color = 'white'))
+```
+
+We don't have to go into such fine detail, we can use "macro" themes to make it easier to change the backgrounds.  
+
+```{r, iris_27}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5, 
+             mapping = aes(color = Species)) +
+  scale_color_discrete(l = 95) +
+  theme_dark()
+```
+
+I personally like the black-white theme and I use darker colors.  
+
+```{r, iris_28}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5, 
+             mapping = aes(color = Species)) +
+  scale_color_discrete(l = 45) +
+  theme_bw()
+```
+
+To move the legend we need another call to `theme()`.  
+
+```{r, iris_29}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5, 
+             mapping = aes(color = Species)) +
+  scale_color_discrete(l = 45) +
+  theme_bw() +
+  theme(legend.position = 'top')
+```
+
+Use the brewer color palettes.  
+
+```{r, iris_30}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(size = 3.5, 
+             mapping = aes(color = Species)) +
+  scale_color_brewer(palette = 'Dark2') +
+  theme_bw() +
+  theme(legend.position = 'top')
+```
+
+There are limited number of colors in the brewer qualitative palettes.  
+
+```{r, iris_31}
+set.seed(2130)
+iris %>% 
+  mutate(random_letters = sample(LETTERS, size = n(), replace = TRUE)) %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = random_letters),
+             size = 3.5) +
+  scale_color_brewer(palette = 'Set1') +
+  theme_bw()
+```
+
+Use color blind friendly palettes from `ggthemes`.  
+
+```{r, iris_32}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species),
+             size = 3.5) +
+  ggthemes::scale_color_colorblind() +
+  theme_bw() +
+  theme(legend.position = 'top')
+```
+
+Another palette from `ggthemes`.  
+
+```{r, iris_33}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species),
+             size = 3.5) +
+  ggthemes::scale_color_calc()+
+  theme_bw() +
+  theme(legend.position = 'top')
+```
+
+Both have very limited number of values.  
+
+```{r, iris_34}
+set.seed(2130)
+iris %>% 
+  mutate(random_letters = sample(LETTERS, size = n(), replace = TRUE)) %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = random_letters),
+             size = 3.5) +
+  ggthemes::scale_color_colorblind() +
+  theme_bw()
+```
+
+Excel colors.  
+
+```{r, iris_35}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species),
+             size = 3.5) +
+  ggthemes::scale_color_excel_new(theme = 'Office Theme') +
+  theme_bw() +
+  theme(legend.position = 'top')
+```
+
+Excel theme.  
+
+```{r}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species),
+             size = 3.5) +
+  ggthemes::theme_excel()
+```
+
+Economist has a theme.  
+
+```{r}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species),
+             size = 3.5) +
+  ggthemes::theme_economist()
+```
+
+
+```{r}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species),
+             size = 3.5) +
+  ggthemes::theme_fivethirtyeight()
+```
+
+
+### Trends per group
+
+Include separate trends per category or Grouping value.  
+
+```{r, iris_36}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species),
+             size = 3.5) +
+  geom_smooth(formula = y ~ x,
+              method = lm,
+              mapping = aes(color = Species)) +
+  ggthemes::scale_color_colorblind() +
+  theme_bw()
+```
+
+We can change the ribbon color by the `fill` aesthetic.  
+
+```{r, iris_37}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species,
+                           shape = Species),
+             size = 3.5) +
+  geom_smooth(formula = y ~ x,
+              method = lm,
+              mapping = aes(color = Species,
+                            fill = Species)) +
+  ggthemes::scale_color_colorblind() +
+  ggthemes::scale_fill_colorblind() +
+  theme_bw()
+```
+
+The linetype is like marker shape.  
+
+```{r, iris_38}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Species,
+                           shape = Species),
+             size = 3.5) +
+  geom_smooth(formula = y ~ x,
+              method = lm,
+              mapping = aes(color = Species,
+                            fill = Species,
+                            linetype = Species)) +
+  ggthemes::scale_color_colorblind() +
+  ggthemes::scale_fill_colorblind() +
+  theme_bw()
+```
+
+We can include the UNGROUPED linear trend in this figure.  
+
+```{r, iris_39}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_smooth(formula = y ~ x,
+              method = lm,
+              color = 'red', fill = 'red') +
+  geom_point(mapping = aes(color = Species,
+                           shape = Species),
+             size = 3.5) +
+  geom_smooth(formula = y ~ x,
+              method = lm,
+              mapping = aes(color = Species,
+                            fill = Species,
+                            linetype = Species)) +
+  ggthemes::scale_color_colorblind() +
+  ggthemes::scale_fill_colorblind() +
+  theme_bw()
+```
+
+Confidence intervals make plots busy...so we can turn them off.  
+
+```{r, iris_40}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_smooth(formula = y ~ x,
+              method = lm,
+              color = 'red', fill = 'red',
+              se = FALSE,
+              size = 1.25) +
+  geom_point(mapping = aes(color = Species,
+                           shape = Species),
+             size = 3.5) +
+  geom_smooth(formula = y ~ x,
+              method = lm,
+              mapping = aes(color = Species,
+                            fill = Species,
+                            linetype = Species),
+              se = FALSE,
+              size = 1.25) +
+  ggthemes::scale_color_colorblind() +
+  ggthemes::scale_fill_colorblind() +
+  theme_bw()
+```
+
+I **never** recommend showing a smoothing line WITHOUT markers.  
+
+```{r, iris_41}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_smooth(formula = y ~ x,
+              method = lm,
+              color = 'red', fill = 'red',
+              se = FALSE,
+              size = 1.25) +
+  # geom_point(mapping = aes(color = Species,
+  #                          shape = Species),
+  #            size = 3.5) +
+  geom_smooth(formula = y ~ x,
+              method = lm,
+              mapping = aes(color = Species,
+                            fill = Species,
+                            linetype = Species),
+              se = FALSE,
+              size = 1.25) +
+  ggthemes::scale_color_colorblind() +
+  ggthemes::scale_fill_colorblind() +
+  theme_bw()
+```
+
+### Continuous colors
+
+We can have 3 variables on a scatter plot where the 3rd variable is continuous and we use color to show the values of that continuous variable.  
+
+```{r, iris_42}
+iris %>% summary()
+```
+
+
+Color based on `Petal.Length`.  
+
+```{r, iris_43}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length),
+             size = 3.5) +
+  theme_bw()
+```
+
+We can use the brewer library's distiller function to create other continuous color palletes.  
+
+```{r, iris_44}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length),
+             size = 3.5) +
+  scale_color_distiller(palette = 'PuBuGn') +
+  theme_bw()
+```
+
+I prefer the viridis library for sequential continuous color scales.  
+
+```{r, iris_45}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length),
+             size = 3.5) +
+  scale_color_viridis_c() +
+  theme_bw()
+```
+
+There are multiple viridis options.  
+
+```{r, iris_46}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length),
+             size = 3.5) +
+  scale_color_viridis_c(option = 'turbo') +
+  theme_bw()
+```
+
+We can bin or categorize a continuous variable.  
+
+```{r, iris_47}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length),
+             size = 3.5) +
+  scale_color_viridis_b(option = 'magma', direction = -1) +
+  theme_bw()
+```
+
+### 4 variables
+
+We can use shape for categorical combined with color for continuous.  
+
+```{r, iris_48}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length,
+                           shape = Species),
+             size = 3.5) +
+  scale_color_viridis_b(option = 'magma', direction = -1) +
+  theme_bw()
+```
+
+
+Alternatively we can use facets for categorical variables.  
+
+```{r, iris_49}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length),
+             size = 3.5) +
+  facet_wrap(~Species) +
+  scale_color_viridis_b(option = 'magma', direction = -1) +
+  theme_bw()
+```
+
+Change the facet strip background.  
+
+```{r, iris_50}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length),
+             size = 3.5) +
+  facet_wrap(~Species) +
+  scale_color_viridis_b(option = 'magma', direction = -1) +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        strip.text = element_text(size = 12))
+```
+
+We can also use color for a categorical. In-line define a boolean for petal being larger than the median petal length.  
+
+```{r, iris_51}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length > median(Petal.Length),
+                           shape = Species),
+             size = 3.5) +
+  facet_wrap(~Species) +
+  scale_color_viridis_d(option = 'viridis') +
+  scale_shape_discrete(guide = 'none') +
+  theme_bw() +
+  theme(strip.background = element_blank(),
+        strip.text = element_text(size = 12),
+        legend.position = 'top',
+        panel.grid = element_line(color = 'black'))
+```
+
+
+We can use size and transparency for continuous variables. So we can show 4 continuous variables on the same scatter plot.  
+
+```{r, iris_52}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length,
+                           size = Petal.Width)) +
+  scale_color_viridis_c(option = 'turbo') +
+  theme_bw()
+```
+
+### 5 variables
+
+We can show 4 continuous variables and 1 categorical on a single scatter plot.  
+
+```{r, iris_53}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length,
+                           size = Petal.Width,
+                           shape = Species)) +
+  scale_color_viridis_c(option = 'turbo') +
+  theme_bw()
+```
+
+Alternatively we can use facets for the categorical.  
+
+```{r, iris_54}
+iris %>% 
+  ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+  geom_point(mapping = aes(color = Petal.Length,
+                           size = Petal.Width)) +
+  facet_wrap(~Species) +
+  scale_color_viridis_c(option = 'turbo') +
+  theme_bw()
+```
+
+But if we look at the petal variables...  
+
+```{r, iris_55}
+iris %>% 
+  ggplot(mapping = aes(x = Petal.Length, y = Petal.Width)) +
+  geom_point(size = 3.5) +
+  theme_bw()
+```
+
+## What are looking at with Scatter plots?  
+
+
+We are trying to find **linear relationships** or **correlations** between PAIRS of variables.  
+
+Can we get a high level overview of the **correlation** between **ALL** pairs of variables?  
+
+To use corrplot we need to calculate the **correlation matrix**.  
+
+```{r, cc_1}
+iris %>% 
+  purrr::keep(is.numeric) %>% 
+  cor()
+```
+
+Instead of printing or displaying the correlation plot, let's visualize it with `corrplot()`.  
+
+```{r, cc_2}
+iris %>% 
+  purrr::keep(is.numeric) %>% 
+  cor() %>% 
+  corrplot::corrplot()
+```
+
+
+We can override the default arguments to show just the upper triangular portion.  
+
+```{r, cc_3}
+iris %>% 
+  purrr::keep(is.numeric) %>% 
+  cor() %>% 
+  corrplot::corrplot(type = 'upper')
+```
+
+We can show numbers instead of circles.  
+
+```{r, cc_4}
+iris %>% 
+  purrr::keep(is.numeric) %>% 
+  cor() %>% 
+  corrplot::corrplot(type = 'upper', method = 'number')
+```
+
+Or can use a mixture of circles and numbers.  
+
+```{r, cc_5}
+iris %>% 
+  purrr::keep(is.numeric) %>% 
+  cor() %>% 
+  corrplot::corrplot.mixed()
+```
+
+We can use other methods such as squares.  
+
+```{r, cc_6}
+iris %>% 
+  purrr::keep(is.numeric) %>% 
+  cor() %>% 
+  corrplot::corrplot(type = 'upper', method = 'square')
+```
+
+The pie chart can be thrown in...  
+
+```{r, cc_7}
+iris %>% 
+  purrr::keep(is.numeric) %>% 
+  cor() %>% 
+  corrplot::corrplot(type = 'upper', method = 'pie')
+```
+
+### Tidyverse correlation plots
+
+We will use `corrr`.  
+
+```{r, load_corrr_package}
+library(corrr)
+```
+
+```{r, dd_1}
+iris %>% 
+  purrr::keep(is.numeric) %>% 
+  corrr::correlate()
+```
+
+I like to include 1's along the main diagonal.  
+
+```{r, dd_2}
+iris %>% 
+  purrr::keep(is.numeric) %>% 
+  corrr::correlate(diagonal = 1, quiet = TRUE)
+```
+
+The `corrr` package has built in plotting functions dedicated to correlation objects.  
+
+```{r, dd_3}
+iris_corrr <- iris %>% 
+  purrr::keep(is.numeric) %>% 
+  corrr::correlate(diagonal = 1, quiet = TRUE)
+```
+
+The default plot is created by `rplot()`.  
+
+```{r, dd_4}
+iris_corrr %>% rplot()
+```
+
+It also has a slick network diagram to show correlations.  
+
+```{r, dd_5}
+iris_corrr %>% network_plot()
+```
+
+So how can we group?  
+
+```{r, dd_6}
+iris_corrr %>% 
+  corrr::stretch()
+```
+
+We can now manually create our own correlation plot.  
+
+```{r, dd_7}
+iris_corrr %>% 
+  corrr::stretch() %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point(mapping = aes(color = r,
+                           size = r)) +
+  coord_equal() +
+  scale_color_gradient2(low = 'red', mid = 'white', high = 'blue',
+                        midpoint = 0,
+                        limits = c(-1, 1)) +
+  scale_size_continuous(guide = 'none',
+                        limits = c(-1, 1)) +
+  labs(x = '', y ='') +
+  theme_bw()
+```
+
+To create a grouped object we need to use a grouping operation.  
+
+```{r, dd_8}
+iris %>% 
+  group_by(Species) %>% 
+  group_modify( ~stretch( correlate(., diagonal = 1, quiet = TRUE) ) ) %>% 
+  ungroup() %>% 
+  ggplot(mapping = aes(x = x, y = y)) +
+  geom_point(mapping = aes(color = r,
+                           size = r)) +
+  coord_equal() +
+  facet_wrap(~Species) +
+  scale_color_gradient2(low = 'red', mid = 'white', high = 'blue',
+                        midpoint = 0,
+                        limits = c(-1, 1)) +
+  scale_size_continuous(guide = 'none',
+                        limits = c(-1, 1)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+
+
